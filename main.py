@@ -57,6 +57,8 @@ while True:
                 # Flipping X for consistency with hand and mouse
                 curPos = [int(lm.x*w) * -1, int(lm.y*h)]
                 break
+        # Draws hand on image (only used when displaying camera feed)
+        mpDraw.draw_landmarks(img, hand, mpHands.HAND_CONNECTIONS)
         
         if prevPos:
             dx = curPos[0] - prevPos[0]
@@ -66,6 +68,8 @@ while True:
     # Updates previous position
     prevPos = curPos
 
+    # Display
+    cv.imshow("Feed", img)
     if cv.waitKey(1) == ord('q'):
         break
 
