@@ -56,6 +56,7 @@ while True:
             if id == 0:
                 # Flipping X for consistency with hand and mouse
                 curPos = [int(lm.x*w) * -1, int(lm.y*h)]
+                distanceAway = lm.z
                 break
         # Draws hand on image (only used when displaying camera feed)
         mpDraw.draw_landmarks(img, hand, mpHands.HAND_CONNECTIONS)
@@ -63,7 +64,13 @@ while True:
         if prevPos:
             dx = curPos[0] - prevPos[0]
             dy = curPos[1] - prevPos[1]
-            auto.moveRel((dx*wRatio)*dTime*12, (dy*hRatio)*dTime*12)
+
+            # 12 is just a constant chosen for no particular reason
+            mult = dTime * 12
+            # Increases multiplier if hand is a certain distance from camera
+            if distanceAway < pow(10, -7):
+                mult *= 5
+            auto.moveRel((dx*wRatio)*mult, (dy*hRatio)*mult)
 
     # Updates previous position
     prevPos = curPos
