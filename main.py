@@ -2,6 +2,7 @@ import time
 import pyautogui as auto
 import cv2 as cv
 from mediapipe import solutions as solutions
+from math import sqrt
 
 
 # INITIALIZING OBJECTS/VARIABLES
@@ -15,6 +16,9 @@ print(width, height, sep=", ")
 pTime = 0
 cTime = 0
 dTime = 0
+
+# This is not recommended but I do it anyways :)
+auto.FAILSAFE = False
 
 # Video capture
 capture = cv.VideoCapture(0)
@@ -48,9 +52,11 @@ while True:
     dTime = cTime - pTime
     pTime = cTime
 
-    # Get location of wrist, compare to a previous location and time difference
+    # If a hand is detected
     if results.multi_hand_landmarks:
+        # Get location of wrist, compare to a previous location and time difference
         hand = results.multi_hand_landmarks[0]
+        # I swear I could probablt index the specific landmark isntead of enumerating
         for id, lm in enumerate(hand.landmark):
             h, w, c = img.shape
             if id == 0:
@@ -61,16 +67,26 @@ while True:
         # Draws hand on image (only used when displaying camera feed)
         mpDraw.draw_landmarks(img, hand, mpHands.HAND_CONNECTIONS)
         
+        # Moves mouse based on hand position
         if prevPos:
             dx = curPos[0] - prevPos[0]
             dy = curPos[1] - prevPos[1]
 
-            # 12 is just a constant chosen for no particular reason
+            # 12 is just a constant chosen because I like it
             mult = dTime * 12
             # Increases multiplier if hand is a certain distance from camera
             if distanceAway < pow(10, -7):
                 mult *= 5
             auto.moveRel((dx*wRatio)*mult, (dy*hRatio)*mult)
+        
+        # Checks distance between thumb and index for click gesture
+        thumb = hand.landmark[4]
+        index = hand.landmark[8]
+        # Was gonna sqrt absolute value but they get squared so already positive
+        thumb_index_distance = sqrt( (thumb.x-index.x)**2 + (thumb.y-index.y)**2 + (thumb.z-index.z)**2 )
+        # By trial and error the thumb_index_distance should be less than ~0.05
+        if thumb_index_distance < 0.05:
+            auto.leftClick(interval = 1.0)
 
     # Updates previous position
     prevPos = curPos
